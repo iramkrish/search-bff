@@ -1,0 +1,58 @@
+package main
+
+import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/iramkrish/search-bff/internal/infra"
+
+	internalhttp "github.com/iramkrish/search-bff/internal/http"
+)
+
+func main() {
+	logger := infra.NewLogger()
+
+	mux := http.NewServeMux()
+	handler := internalhttp.NewHandler(logger)
+
+	mux.Handle("/search", handler)
+
+	server := &http.Server{
+		Addr: ":8080",
+		Handler: internalhttp.Chain(
+			mux,
+			internalhttp.RequestID(),
+			internalhttp.Logging(logger),
+			internalhttp.Timeout(2*time.Second),
+		),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+
+	go func() {
+		logger.Println("server started on :8080")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("listen error: %v", err)
+		}
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	<-shutdown
+	logger.Println("shutdown initiated")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Fatalf("shutdown failed: %v", err)
+	}
+
+	logger.Println("server stopped")
+}
