@@ -13,6 +13,8 @@ import (
 	internalhttp "github.com/iramkrish/search-bff/internal/http"
 )
 
+// main starts an HTTP server on :8080 that serves the /search endpoint and shuts down gracefully on SIGINT or SIGTERM.
+// The server applies middleware for request IDs and logging, enforces read/write/idle timeouts, and allows up to 5 seconds for graceful shutdown.
 func main() {
 	logger := infra.NewLogger()
 
