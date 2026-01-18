@@ -52,6 +52,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// writeJSON writes v as a JSON response with the given HTTP status code.
+// It sets the Content-Type header to "application/json", writes the status code, and encodes v to the response body; any encoding error is intentionally ignored.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
