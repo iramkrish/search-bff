@@ -1,66 +1,3 @@
-// package search
-
-// import (
-// 	"context"
-// 	"log"
-// 	"sync"
-
-// 	"github.com/iramkrish/search-bff/internal/clients"
-// 	model "github.com/iramkrish/search-bff/internal/modal"
-// )
-
-// type Service struct {
-// 	hotels  *clients.HotelClient
-// 	flights *clients.FlightClient
-// 	logger  *log.Logger
-// }
-
-// func NewService(logger *log.Logger) *Service {
-// 	return &Service{
-// 		hotels:  clients.NewHotelClient(),
-// 		flights: clients.NewFlightClient(),
-// 		logger:  logger,
-// 	}
-// }
-
-// func (s *Service) Search(ctx context.Context, q string) (*model.SearchResponse, error) {
-// 	var (
-// 		wg      sync.WaitGroup
-// 		resp    model.SearchResponse
-// 		errOnce error
-// 	)
-
-// 	wg.Add(2)
-
-// 	go func() {
-// 		defer wg.Done()
-// 		hotels, err := s.hotels.Search(ctx, q)
-// 		if err != nil {
-// 			s.logger.Println("hotel search failed:", err)
-// 			return
-// 		}
-// 		resp.Hotels = hotels
-// 	}()
-
-// 	go func() {
-// 		defer wg.Done()
-// 		flights, err := s.flights.Search(ctx, q)
-// 		if err != nil {
-// 			s.logger.Println("flight search failed:", err)
-// 			return
-// 		}
-// 		resp.Flights = flights
-// 	}()
-
-// 	wg.Wait()
-
-// 	if len(resp.Hotels) == 0 && len(resp.Flights) == 0 {
-// 		errOnce = ErrUpstreamUnavailable
-// 	}
-
-// 	return &resp, errOnce
-// }
-
 package search
 
 import (
@@ -88,9 +25,10 @@ func NewService(logger *log.Logger) *Service {
 
 func (s *Service) Search(ctx context.Context, q string) (*model.SearchResponse, error) {
 	var (
-		wg      sync.WaitGroup
-		hotels  []model.Hotel
-		flights []model.Flight
+		wg       sync.WaitGroup
+		hotels   []model.Hotel
+		flights  []model.Flight
+		warnings []string
 	)
 
 	wg.Add(2)
@@ -121,8 +59,16 @@ func (s *Service) Search(ctx context.Context, q string) (*model.SearchResponse, 
 		return nil, ErrUpstreamUnavailable
 	}
 
+	if len(hotels) == 0 {
+		warnings = append(warnings, "hotels unavailable")
+	}
+	if len(flights) == 0 {
+		warnings = append(warnings, "flights unavailable")
+	}
+
 	return &model.SearchResponse{
-		Hotels:  hotels,
-		Flights: flights,
+		Hotels:   hotels,
+		Flights:  flights,
+		Warnings: warnings,
 	}, nil
 }

@@ -1,10 +1,12 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/iramkrish/search-bff/internal/search"
 )
@@ -33,17 +35,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Search(r.Context(), query)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	resp, err := h.service.Search(ctx, query)
 	if err != nil {
-		status := http.StatusInternalServerError
 		if errors.Is(err, search.ErrUpstreamUnavailable) {
-			status = http.StatusBadGateway
+			writeError(w, http.StatusBadGateway, err.Error())
+			return
 		}
-		writeError(w, status, err.Error())
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

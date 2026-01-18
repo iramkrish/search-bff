@@ -11,6 +11,7 @@ type Flight struct {
 }
 
 type SearchResponse struct {
-	Hotels  []Hotel  `json:"hotels,omitempty"`
-	Flights []Flight `json:"flights,omitempty"`
+	Hotels   []Hotel  `json:"hotels,omitempty"`
+	Flights  []Flight `json:"flights,omitempty"`
+	Warnings []string `json:"warnings,omitempty"`
 }
