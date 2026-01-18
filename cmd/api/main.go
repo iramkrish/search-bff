@@ -26,8 +26,8 @@ func main() {
 		Handler: internalhttp.Chain(
 			mux,
 			internalhttp.RequestID(),
+			// internalhttp.Timeout(2*time.Second),
 			internalhttp.Logging(logger),
-			internalhttp.Timeout(2*time.Second),
 		),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,

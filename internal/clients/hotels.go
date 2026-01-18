@@ -15,7 +15,7 @@ func NewHotelClient() *HotelClient {
 
 func (c *HotelClient) Search(ctx context.Context, q string) ([]model.Hotel, error) {
 	select {
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(20000 * time.Millisecond):
 		return []model.Hotel{
 			{ID: "h1", Name: "Grand Hotel"},
 		}, nil
